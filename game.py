@@ -10,13 +10,13 @@ active_piece = []
 game_score = 0
 
 pieces = [
-    ["L", [(0, 4), (1, 4), (2, 4), (2, 5)]],
-    ["S", [(1, 5), (1, 4), (2, 4), (2, 3)]],
-    ["I", [(0, 4), (1, 4), (2, 4), (3, 4)]],
-    ["T", [(1, 4), (2, 4), (2, 3), (2, 5)]],
+    ["L", [(1, 4), (0, 4), (2, 4), (2, 5)]],
+    ["S", [(0, 4), (0, 5), (1, 4), (1, 3)]],
+    ["I", [(1, 4), (0, 4), (2, 4), (3, 4)]],
+    ["T", [(1, 4), (0, 4), (1, 3), (1, 5)]],
     ["B", [(0, 4), (0, 5), (1, 4), (1, 5)]],
-    ["J", [(0, 4), (1, 4), (2, 4), (2, 3)]],
-    ["Z", [(1, 3), (1, 4), (2, 4), (2, 5)]]]
+    ["J", [(1, 4), (0, 4), (2, 4), (2, 3)]],
+    ["Z", [(0, 4), (0, 3), (1, 4), (1, 5)]]]
 
 
 def reset():
@@ -82,22 +82,27 @@ def get_state():
 
 
 def rotate_piece(piece, grid):
-    midLoc = piece[1][0]
     if piece[0] == 'B':
         return piece, grid
-    avgX = 0
-    avgY = 0
-    for loc in piece[1]:
-        avgX += loc[0]
-        avgY += loc[1]
-    avgX /= 4
-    avgY /= 4
-    if piece[0] == 'L' or piece[0] == 'J' or piece[0] == 'T':
-        midLoc = (round(avgX), round(avgY))
-    if piece[0] == 'I':
-        midLoc = (int(avgX), int(avgY))
-    if piece[0] == 'Z' or piece[0] == 'S':
-        midLoc = (math.ceil(avgX), math.ceil(avgY))
+
+    midLoc = piece[1][0]
+
+    # avgX = 0
+    # avgY = 0
+    # for loc in piece[1]:
+    #     avgX += loc[0]
+    #     avgY += loc[1]
+    # avgX /= 4
+    # avgY /= 4
+    #
+    # midLoc = (round(avgX), round(avgY))
+
+    # if piece[0] == 'L' or piece[0] == 'J' or piece[0] == 'T':
+    #     midLoc = (round(avgX), round(avgY))
+    # if piece[0] == 'I' or piece[0] == 'Z' or piece[0] == 'S':
+    #     midLoc = (int(avgX), int(avgY))
+    # if piece[0] == 'Z' or piece[0] == 'S':
+    #     midLoc = (math.ceil(avgX), math.ceil(avgY))
 
     newPieceLoc = [loc for loc in piece[1]]
     for i in range(len(piece[1])):

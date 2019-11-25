@@ -18,8 +18,8 @@ class Policy(nn.Module):
         self.state_space = game.state_size
         self.action_space = game.action_size
 
-        self.l1 = nn.Linear(self.state_space, 128, bias=False)
-        self.l2 = nn.Linear(128, self.action_space, bias=False)
+        self.l1 = nn.Linear(self.state_space, 360, bias=False)
+        self.l2 = nn.Linear(360, self.action_space, bias=False)
 
         self.gamma = gamma
 
@@ -98,7 +98,6 @@ def train(episodes, save=0):
     running_reward = 1
     for episode in range(episodes):
         state = game.reset()  # Reset environment and record the starting state
-        done = False
         f = True
 
         game_reward = 0
@@ -108,6 +107,11 @@ def train(episodes, save=0):
             f = False
             # Step through environment using chosen action
             state, reward, done = game.step(action.item())
+
+            if action.item() == 1:
+                x = 0
+            if action.item() == 2:
+                x = 0
 
             # Save reward
             policy.reward_episode.append(reward)
@@ -128,4 +132,5 @@ def train(episodes, save=0):
             torch.save(policy.state_dict(), PATH)
 
 
-train(episodes=10000, save=1000)
+if __name__== "__main__":
+    train(episodes=10000, save=500)
