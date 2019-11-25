@@ -92,7 +92,7 @@ def update_policy():
     policy.reward_episode = []
 
 
-def train(episodes):
+def train(episodes, save=0):
     global f
 
     running_reward = 1
@@ -123,9 +123,9 @@ def train(episodes):
         if episode % 50 == 0:
             print('Episode {}\tLast reward: {:5d}\tAverage reward: {:.2f}'.format(episode, game_reward, running_reward))
 
+        if save != 0 and (episode + 1) % save == 0:
+            PATH = 'models/tetris_policy_' + str(episode + 1) + '.pth'
+            torch.save(policy.state_dict(), PATH)
 
-episodes = 10000
-train(episodes)
 
-PATH = './tetris_policy10000.pth'
-torch.save(policy.state_dict(), PATH)
+train(episodes=10000, save=1000)
