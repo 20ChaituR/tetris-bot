@@ -1,13 +1,20 @@
 import random
-
 import numpy as np
 
-state_size = 180
-action_size = 4  # nothing, left, right, up
+
+# ========================================================================
+#
+#                           State Variables
+#
+# ========================================================================
+
+state_size = 180  # size of grid
+action_size = 4   # nothing, left, right, up
 grid = [['' for j in range(10)] for i in range(18)]
 active_piece = []
 game_score = 0
 
+# the first coordinate represents what to rotate around
 pieces = [
     ["L", [(1, 4), (0, 4), (2, 4), (2, 5)]],
     ["S", [(0, 4), (0, 5), (1, 4), (1, 3)]],
@@ -18,6 +25,13 @@ pieces = [
     ["Z", [(0, 4), (0, 3), (1, 4), (1, 5)]]]
 
 
+# ========================================================================
+#
+#                             Commands
+#
+# ========================================================================
+
+# restart the game
 def reset():
     global grid, active_piece, game_score
     grid = [['' for _ in range(10)] for _ in range(18)]
@@ -29,6 +43,7 @@ def reset():
     return get_state()
 
 
+# advance one game step with the given action
 def step(action):
     global grid, active_piece, game_score
     if action == 1:
@@ -60,6 +75,7 @@ def step(action):
     return get_state(), score, False
 
 
+# returns the state of the game, which is a reshaped form of grid
 def get_state():
     global grid, active_piece, game_score
     piece_map = {
@@ -80,6 +96,13 @@ def get_state():
     return st.reshape(180)
 
 
+# ========================================================================
+#
+#                             Moves
+#
+# ========================================================================
+
+# rotates given piece clockwise if possible
 def rotate_piece(piece, grid):
     if piece[0] == 'B':
         return piece, grid
@@ -115,6 +138,7 @@ def rotate_piece(piece, grid):
     return [piece[0], newPieceLoc], grid
 
 
+# moves given piece to the left if possible
 def move_left(piece, grid):
     newPieceLoc = [loc for loc in piece[1]]
     for i in range(len(piece[1])):
@@ -143,6 +167,7 @@ def move_left(piece, grid):
     return [piece[0], newPieceLoc], grid
 
 
+# moves given piece to the right if possible
 def move_right(piece, grid):
     newPieceLoc = [loc for loc in piece[1]]
     for i in range(len(piece[1])):
@@ -171,6 +196,7 @@ def move_right(piece, grid):
     return [piece[0], newPieceLoc], grid
 
 
+# moves given piece down if possible
 def move_down(piece, grid):
     newPieceLoc = [loc for loc in piece[1]]
     for i in range(len(piece[1])):
@@ -199,6 +225,7 @@ def move_down(piece, grid):
     return [piece[0], newPieceLoc], grid, True
 
 
+# clears all lines in the grid and returns the score
 def clear_lines(grid):
     count = 0
     for r in range(len(grid)):

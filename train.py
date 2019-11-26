@@ -7,11 +7,22 @@ from torch.distributions import Categorical
 
 import game
 
+
+# ========================================================================
+#
+#                           Initialization
+#
+# ========================================================================
+
+# Network hyper-parameters
 learning_rate = 0.01
 gamma = 0.99
 max_time = 1000
 
+f = True
 
+
+# Policy network
 class Policy(nn.Module):
     def __init__(self):
         super(Policy, self).__init__()
@@ -44,9 +55,14 @@ class Policy(nn.Module):
 policy = Policy()
 optimizer = optim.Adam(policy.parameters(), lr=learning_rate)
 
-f = True
 
+# ========================================================================
+#
+#                           Training
+#
+# ========================================================================
 
+# Selects action based on probabilities in state
 def select_action(state):
     global f
 
@@ -64,6 +80,7 @@ def select_action(state):
     return action
 
 
+# Updates policy network after full game
 def update_policy():
     R = 0
     rewards = []
@@ -132,5 +149,5 @@ def train(episodes, save=0):
             torch.save(policy.state_dict(), PATH)
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     train(episodes=10000, save=1000)
