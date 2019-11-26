@@ -1,4 +1,3 @@
-import math
 import random
 
 import numpy as np
@@ -44,6 +43,8 @@ def step(action):
     score = 1
 
     if not poss:
+        grid, score = clear_lines(grid)
+
         active_piece = pieces[random.randint(0, 6)]
         lose = False
         for loc in active_piece[1]:
@@ -55,8 +56,6 @@ def step(action):
 
         if lose:
             return get_state(), 0, True
-
-        grid, score = clear_lines(grid)
 
     return get_state(), score, False
 
@@ -86,23 +85,6 @@ def rotate_piece(piece, grid):
         return piece, grid
 
     midLoc = piece[1][0]
-
-    # avgX = 0
-    # avgY = 0
-    # for loc in piece[1]:
-    #     avgX += loc[0]
-    #     avgY += loc[1]
-    # avgX /= 4
-    # avgY /= 4
-    #
-    # midLoc = (round(avgX), round(avgY))
-
-    # if piece[0] == 'L' or piece[0] == 'J' or piece[0] == 'T':
-    #     midLoc = (round(avgX), round(avgY))
-    # if piece[0] == 'I' or piece[0] == 'Z' or piece[0] == 'S':
-    #     midLoc = (int(avgX), int(avgY))
-    # if piece[0] == 'Z' or piece[0] == 'S':
-    #     midLoc = (math.ceil(avgX), math.ceil(avgY))
 
     newPieceLoc = [loc for loc in piece[1]]
     for i in range(len(piece[1])):
@@ -222,7 +204,7 @@ def clear_lines(grid):
     for r in range(len(grid)):
         isLine = True
         for c in range(len(grid[0])):
-            if not grid[r][c]:
+            if grid[r][c] == '':
                 isLine = False
                 break
         if isLine:
