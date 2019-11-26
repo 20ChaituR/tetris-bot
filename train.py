@@ -18,6 +18,7 @@ import game
 learning_rate = 0.01
 gamma = 0.99
 max_time = 1000
+episodes = 10000
 
 f = True
 
@@ -150,4 +151,4 @@ def train(episodes, save=0):
 
 
 if __name__ == "__main__":
-    train(episodes=10000, save=1000)
+    train(episodes=episodes, save=episodes//10)
