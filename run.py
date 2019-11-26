@@ -50,9 +50,16 @@ def update_frame(x):
         score = 0
 
 
+button_x = 0
+button_y = 0
+button_dx = 0
+button_dy = 0
+button_text = 'Stop Bot'
+
+
 @window.event
 def on_draw():
-    global score, high_score, last_move
+    global score, high_score, last_move, button_x, button_y, button_dx, button_dy, button_text
 
     window.clear()
 
@@ -93,14 +100,15 @@ def on_draw():
                               anchor_x='center', anchor_y='center')
     label.draw()
 
-    x = GAME_WIDTH + 3 * UI_WIDTH // 4
-    y = GAME_HEIGHT - 6 * font_size
-    dx = UI_WIDTH // 2
-    dy = 2 * font_size
-    pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [x, y, x - dx, y, x - dx, y - dy, x, y - dy]),
-                         ('c3B', (200, 200, 200) * 4))
+    button_x = GAME_WIDTH + 3 * UI_WIDTH // 4
+    button_y = GAME_HEIGHT - 6 * font_size
+    button_dx = UI_WIDTH // 2
+    button_dy = 2 * font_size
+    pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [button_x, button_y, button_x - button_dx, button_y,
+                                                         button_x - button_dx, button_y - button_dy, button_x,
+                                                         button_y - button_dy]), ('c3B', (200, 200, 200) * 4))
 
-    label = pyglet.text.Label('Stop Bot',
+    label = pyglet.text.Label(button_text,
                               font_name='Times New Roman',
                               font_size=font_size,
                               color=(0, 0, 0, 255),
@@ -166,6 +174,18 @@ def on_key_press(symbol, modifiers):
         game.active_piece, game.grid = game.rotate_piece(game.active_piece, game.grid)
         last_move = 3
 
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    global button_x, button_y, button_dx, button_dy, button_text, bot_mode
+    if button_x - button_dx <= x and x <= button_x:
+        if button_y - button_dy <= y and y <= button_y:
+            if bot_mode:
+                bot_mode = False
+                button_text = 'Start Bot'
+            else:
+                bot_mode = True
+                button_text = 'Stop Bot'
 
 pyglet.clock.schedule_interval(update_frame, 1.0)
 pyglet.app.run()
