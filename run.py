@@ -44,6 +44,7 @@ pyglet.gl.glClearColor(1, 1, 1, 1)
 window.clear()
 
 bot_mode = True
+down_press = False
 
 
 # ========================================================================
@@ -55,7 +56,7 @@ bot_mode = True
 # If in bot mode, get the next move from the policy network
 # If not, step forward in the game
 def update_frame(x):
-    global state, score, high_score, last_move, bot_mode, keys
+    global state, score, high_score, last_move, bot_mode, down_press
 
     if bot_mode:
         action = train.select_action(state).item()
@@ -64,6 +65,9 @@ def update_frame(x):
         last_move = action
     else:
         state, reward, done = game.step(0)
+        if down_press:
+            game.active_piece, game.grid, _ = game.move_down(game.active_piece, game.grid)
+            last_move = 4
 
     score += reward
 
@@ -158,7 +162,12 @@ def on_draw():
         y = GAME_HEIGHT - 10 * FONT_SIZE
         dx = KEY_SIZE
         dy = KEY_SIZE
-    if last_move == 1 or last_move == 2 or last_move == 3:
+    elif last_move == 4:
+        x = GAME_WIDTH + (UI_WIDTH + KEY_SIZE) / 2
+        y = GAME_HEIGHT - 10 * FONT_SIZE - KEY_SIZE
+        dx = KEY_SIZE
+        dy = KEY_SIZE
+    if last_move == 1 or last_move == 2 or last_move == 3 or last_move == 4:
         pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [x, y, x - dx, y, x - dx, y - dy, x, y - dy]),
                              ('c3B', (200, 200, 0) * 4))
         last_move = 0
@@ -188,7 +197,7 @@ def on_draw():
 # Make a move depending on the key press
 @window.event
 def on_key_press(symbol, modifiers):
-    global last_move
+    global last_move, down_press
     if symbol == key.LEFT:
         game.active_piece, game.grid = game.move_left(game.active_piece, game.grid)
         last_move = 1
@@ -198,6 +207,15 @@ def on_key_press(symbol, modifiers):
     if symbol == key.UP:
         game.active_piece, game.grid = game.rotate_piece(game.active_piece, game.grid)
         last_move = 3
+    if symbol == key.DOWN:
+        down_press = True
+
+
+@window.event
+def on_key_release(symbol, modifiers):
+    global down_press
+    if symbol == key.DOWN:
+        down_press = False
 
 
 # Toggle between bot and player mode
