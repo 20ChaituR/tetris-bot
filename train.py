@@ -18,8 +18,8 @@ class Policy(nn.Module):
         self.state_space = game.state_size
         self.action_space = game.action_size
 
-        self.l1 = nn.Linear(self.state_space, 360, bias=False)
-        self.l2 = nn.Linear(360, self.action_space, bias=False)
+        self.l1 = nn.Linear(self.state_space, 500, bias=False)
+        self.l2 = nn.Linear(500, self.action_space, bias=False)
 
         self.gamma = gamma
 
@@ -133,4 +133,4 @@ def train(episodes, save=0):
 
 
 if __name__== "__main__":
-    train(episodes=10000, save=500)
+    train(episodes=10000, save=1000)
