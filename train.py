@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.distributions import Categorical
+import torch.nn.functional as F
 
 import game
-
 
 # ========================================================================
 #
@@ -15,10 +15,12 @@ import game
 # ========================================================================
 
 # Network hyper-parameters
-learning_rate = 0.01
+learning_rate = 2e-6
 gamma = 0.99
-max_time = 1000
-episodes = 10000
+max_time = 200
+episodes = -1  # Put -1 if you want infinite episodes
+save = 10000
+starting_episode = 170000
 
 f = True
 
@@ -30,8 +32,14 @@ class Policy(nn.Module):
         self.state_space = game.state_size
         self.action_space = game.action_size
 
-        self.l1 = nn.Linear(self.state_space, 500, bias=False)
-        self.l2 = nn.Linear(500, self.action_space, bias=False)
+        # self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=4, stride=2)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
+        self.fc3 = nn.Linear(768, 512)
+        self.fc4 = nn.Linear(512, self.action_space)
+
+        # self.l1 = nn.Linear(self.state_space, 1800, bias=False)
+        # self.l2 = nn.Linear(1800, self.action_space, bias=False)
 
         self.gamma = gamma
 
@@ -43,17 +51,24 @@ class Policy(nn.Module):
         self.loss_history = []
 
     def forward(self, x):
-        model = torch.nn.Sequential(
-            self.l1,
-            nn.Dropout(p=0.6),
-            nn.ReLU(),
-            self.l2,
-            nn.Softmax(dim=-1)
-        )
-        return model(x)
+        # model = torch.nn.Sequential(
+        #     self.l1,
+        #     nn.Dropout(p=0.3),
+        #     nn.ReLU(),
+        #     self.l2,
+        #     nn.Softmax(dim=-1)
+        # )
+        # return model(x)
+
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.fc3(x.view(-1)))
+        return F.softmax(self.fc4(x), dim=-1)
 
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 policy = Policy()
+# policy.to(device=device)
 optimizer = optim.Adam(policy.parameters(), lr=learning_rate)
 
 
@@ -68,7 +83,10 @@ def select_action(state):
     global f
 
     # Select an action (0 or 1) by running policy model and choosing based on the probabilities in state
-    state = torch.from_numpy(state).type(torch.FloatTensor)
+    # .type(torch.FloatTensor)
+    state = torch.from_numpy(state)
+    # state = state.cuda()
+    state = state.float()
     state = policy(Variable(state))
     c = Categorical(state)
     action = c.sample()
@@ -110,11 +128,16 @@ def update_policy():
     policy.reward_episode = []
 
 
-def train(episodes, save=0):
+def train(num_episodes, save_rate=0, starting_episode=0):
     global f
 
+    if starting_episode > 0:
+        model = 'models/tetris_policy_' + str(starting_episode) + '.pth'
+        policy.load_state_dict(torch.load(model))
+
     running_reward = 1
-    for episode in range(episodes):
+    episode = starting_episode
+    while episode != num_episodes:
         state = game.reset()  # Reset environment and record the starting state
         f = True
 
@@ -125,11 +148,6 @@ def train(episodes, save=0):
             f = False
             # Step through environment using chosen action
             state, reward, done = game.step(action.item())
-
-            if action.item() == 1:
-                x = 0
-            if action.item() == 2:
-                x = 0
 
             # Save reward
             policy.reward_episode.append(reward)
@@ -145,10 +163,12 @@ def train(episodes, save=0):
         if episode % 50 == 0:
             print('Episode {}\tLast reward: {:5d}\tAverage reward: {:.2f}'.format(episode, game_reward, running_reward))
 
-        if save != 0 and (episode + 1) % save == 0:
+        if save_rate != 0 and (episode + 1) % save_rate == 0:
             PATH = 'models/tetris_policy_' + str(episode + 1) + '.pth'
             torch.save(policy.state_dict(), PATH)
 
+        episode += 1
+
 
 if __name__ == "__main__":
-    train(episodes=episodes, save=episodes//10)
+    train(num_episodes=episodes, save_rate=save, starting_episode=starting_episode)
