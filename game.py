@@ -1,16 +1,18 @@
 import random
 import numpy as np
 
-
 # ========================================================================
 #
 #                           State Variables
 #
 # ========================================================================
 
+prev_state = [[0 for _ in range(10)] for _ in range(18)]
+cur_state = [[0 for _ in range(10)] for _ in range(18)]
 state_size = 180  # size of grid
-action_size = 4   # nothing, left, right, up
-grid = [['' for j in range(10)] for i in range(18)]
+action_size = 4  # nothing, left, right, up
+
+grid = [['' for _ in range(10)] for _ in range(18)]
 active_piece = []
 game_score = 0
 
@@ -55,7 +57,7 @@ def step(action):
 
     active_piece, grid, poss = move_down(active_piece, grid)
 
-    score = 1
+    score = 0
 
     if not poss:
         grid, score = clear_lines(grid)
@@ -77,23 +79,21 @@ def step(action):
 
 # returns the state of the game, which is a reshaped form of grid
 def get_state():
-    global grid, active_piece, game_score
-    piece_map = {
-        '': 0,
-        'L': 1,
-        'S': 2,
-        'I': 3,
-        'T': 4,
-        'B': 5,
-        'J': 6,
-        'Z': 7}
+    global grid, active_piece, game_score, prev_state, cur_state
 
-    st = np.zeros((18, 10))
+    cur_state = np.zeros((18, 10))
     for i in range(18):
         for j in range(10):
-            st[i][j] = piece_map[grid[i][j]]
+            cur_state[i][j] = 0 if grid[i][j] == '' else 1
 
-    return st.reshape(180)
+    state = np.zeros((18, 10))
+    for i in range(18):
+        for j in range(10):
+            state[i][j] = cur_state[i][j] - prev_state[i][j]
+
+    prev_state = cur_state
+
+    return state.reshape((1, 1, 18, 10))
 
 
 # ========================================================================
@@ -242,13 +242,13 @@ def clear_lines(grid):
                 for c in range(len(grid[0])):
                     grid[nr][c] = grid[nr - 1][c]
     if count == 0:
-        score = 0
+        score = 1
     elif count == 1:
-        score = 40
+        score = 400
     elif count == 2:
-        score = 100
+        score = 1000
     elif count == 3:
-        score = 300
+        score = 3000
     else:
-        score = 1200
+        score = 12000
     return grid, score

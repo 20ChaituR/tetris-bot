@@ -15,12 +15,12 @@ import game
 # ========================================================================
 
 # Network hyper-parameters
-learning_rate = 2e-6
+learning_rate = 2e-5
 gamma = 0.99
-max_time = 200
+max_time = 1000
 episodes = -1  # Put -1 if you want infinite episodes
 save = 10000
-starting_episode = 170000
+starting_episode = 310000
 
 f = True
 
@@ -66,9 +66,10 @@ class Policy(nn.Module):
         return F.softmax(self.fc4(x), dim=-1)
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 policy = Policy()
-# policy.to(device=device)
+policy.to(device)
 optimizer = optim.Adam(policy.parameters(), lr=learning_rate)
 
 
@@ -83,10 +84,8 @@ def select_action(state):
     global f
 
     # Select an action (0 or 1) by running policy model and choosing based on the probabilities in state
-    # .type(torch.FloatTensor)
-    state = torch.from_numpy(state)
-    # state = state.cuda()
-    state = state.float()
+    state = torch.from_numpy(state).float().to(device)
+
     state = policy(Variable(state))
     c = Categorical(state)
     action = c.sample()
@@ -110,7 +109,7 @@ def update_policy():
         rewards.insert(0, R)
 
     # Scale rewards
-    rewards = torch.FloatTensor(rewards)
+    rewards = torch.FloatTensor(rewards).to(device)
     rewards = (rewards - rewards.mean()) / (rewards.std() + np.finfo(np.float32).eps)
 
     # Calculate loss
@@ -130,10 +129,14 @@ def update_policy():
 
 def train(num_episodes, save_rate=0, starting_episode=0):
     global f
+    import time
 
     if starting_episode > 0:
         model = 'models/tetris_policy_' + str(starting_episode) + '.pth'
         policy.load_state_dict(torch.load(model))
+
+    start_time = time.time()
+    total_time = 0
 
     running_reward = 1
     episode = starting_episode
@@ -143,7 +146,7 @@ def train(num_episodes, save_rate=0, starting_episode=0):
 
         game_reward = 0
 
-        for time in range(max_time):
+        for _ in range(max_time):
             action = select_action(state)
             f = False
             # Step through environment using chosen action
@@ -161,7 +164,12 @@ def train(num_episodes, save_rate=0, starting_episode=0):
         update_policy()
 
         if episode % 50 == 0:
-            print('Episode {}\tLast reward: {:5d}\tAverage reward: {:.2f}'.format(episode, game_reward, running_reward))
+            cur_time = time.time()
+            total_time += cur_time - start_time
+            start_time = cur_time
+            print('Episode {}\tLast reward: {:5d}\tAverage reward: {:.2f}\tTime: {:.2f}'.format(episode, game_reward,
+                                                                                                running_reward,
+                                                                                                total_time))
 
         if save_rate != 0 and (episode + 1) % save_rate == 0:
             PATH = 'models/tetris_policy_' + str(episode + 1) + '.pth'

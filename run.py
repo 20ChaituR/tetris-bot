@@ -2,9 +2,12 @@ import pyglet
 from pyglet.window import key
 import torch
 
+from torch.autograd import Variable
+from torch.distributions import Categorical
+import torch.nn.functional as F
+
 import game
 import train
-
 
 # ========================================================================
 #
@@ -15,7 +18,7 @@ import train
 # which model to run
 # the full list of models are contained in the models folder
 # training the network will generate models
-model = 'models/tetris_policy_10000.pth'
+model = 'models/tetris_policy_470000.pth'
 
 # Loading the model and resetting the game state
 policy = train.Policy()
@@ -37,7 +40,7 @@ SCREEN_TITLE = "Tetris"
 FONT_SIZE = 11
 KEY_SIZE = 15
 
-FPS = 1 / 2.0
+FPS = 1 / 120.0
 
 # Starting up the window
 window = pyglet.window.Window(GAME_WIDTH + UI_WIDTH, GAME_HEIGHT)
@@ -60,7 +63,17 @@ def update_frame(x):
     global state, score, high_score, last_move, bot_mode, down_press
 
     if bot_mode:
-        action = train.select_action(state).item()
+        # a = policy(Variable(torch.from_numpy(state).type(torch.FloatTensor)))
+        # _, ac = a.max(0)
+        # action = ac.item()
+
+        a = policy(Variable(torch.from_numpy(state).type(torch.FloatTensor)))
+        # a = F.softmax(a, dim=-1)
+        c = Categorical(a)
+        action = c.sample()
+
+        # action = train.select_action(state).item()
+
         state, reward, done = game.step(action)
 
         last_move = action
